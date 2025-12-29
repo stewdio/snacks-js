@@ -100,10 +100,10 @@ How about some higher order logic that feels a bit like Lisp / Scheme? Bonus: Th
 
 ###  Randomness
 
-`random`,  
-`randomBetween`,  
-`randomInteger`,  
-`randomIntegerBetween`,  
+`random`  
+`randomBetween`  
+`randomInteger`  
+`randomIntegerBetween`  
 
 
 ###  Misc unitless
