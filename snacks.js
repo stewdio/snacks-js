@@ -4,7 +4,7 @@
 
 //  Relax and have a tasty snack :)
 
-const VERSION = '1.0.3'
+const VERSION = '1.0.4'
 
 
 
@@ -667,8 +667,8 @@ function signedPower( x, y ){
 
 
 const 
-PI  = Math.PI,    //  π
-TAU = Math.PI * 2,//  τ
+PI  = Math.PI,   //  π
+TAU = Math.PI * 2//  τ
 
 function degreesToRadians( degrees ){
 
@@ -889,6 +889,7 @@ function hslToRgb( h, s, l ){
 //  Metrics unit prefixes. 
 //  https://www.nist.gov/pml/owm/metric-si-prefixes
 
+const
 QUETTA =  30,
 RONNA  =  27,
 YOTTA  =  24,
@@ -1096,7 +1097,7 @@ export {
 	randomBetween,
 	randomInteger,
 	randomIntegerBetween,
-	
+
 	clamp,
 	round,
 	normalize,
