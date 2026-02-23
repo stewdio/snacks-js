@@ -1312,7 +1312,7 @@ export {
 	DEKA  ,
 	UNIT  ,
 	DECI  ,
-	CENTA ,
+	CENTI ,
 	MILLI ,
 	MICRO ,
 	NANO  ,
