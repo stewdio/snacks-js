@@ -950,7 +950,7 @@ function findMidpoint( a, b, av, bv, range ){
 		const span = isUsefulNumber( range ) ? range : TAU
 		range = new Range( 0, span, true )
 	}
-	const halfRange = range.span / 2,
+	const halfRange = range.span / 2
 
 
 	//  Let’s start out be ensuring that both numbers 
