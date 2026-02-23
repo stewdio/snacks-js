@@ -1,20 +1,37 @@
 {
-  "name": "snacks-js",
-  "version": "1.0.4",
-  "description": "Let’s have some snacks!",
-  "homepage": "https://github.com/stewdio/snacks-js#readme",
-  "bugs": {
-    "url": "https://github.com/stewdio/snacks-js/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/stewdio/snacks-js.git"
-  },
-  "license": "MIT",
-  "author": "Stewart Smith",
-  "type": "module",
-  "main": "snacks.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  }
+	"name": "snacks-js",
+	"version": "1.1.0",
+	"description": "A lightweight collection of utility functions for creative JavaScript work.",
+	"author": "Stewart Smith",
+	"license": "MIT",
+	"homepage": "https://github.com/stewdio/snacks-js#readme",
+	"repository": {
+
+		"type": "git",
+		"url":  "https://github.com/stewdio/snacks-js.git"
+	},
+	"type": "module",
+	"main": "snacks.js",
+	"exports": {
+		
+		".": "./snacks.js"
+	},
+	"files": [
+
+		"snacks.js",
+		"README.md",
+		"LICENSE"
+	],
+	"keywords": [
+
+		"utilities",
+		"math",
+		"geometry",
+		"animation",
+		"creative-coding"
+	],
+	"bugs": {
+
+		"url": "https://github.com/stewdio/snacks-js/issues"
+	}
 }

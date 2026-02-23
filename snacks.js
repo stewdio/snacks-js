@@ -1,10 +1,11 @@
+//  Copyright ©️ 2025–2026 Stewart Smith. See LICENSE for details.
 
 
 
 
 //  Relax and have a tasty snack :)
 
-const VERSION = '1.0.4'
+const VERSION = '1.1.0'
 
 
 
@@ -170,6 +171,187 @@ function arrayCount( a ){
 }
 
 
+//  Fisher–Yates (a.k.a. Knuth) shuffle. 
+//  Fast. Unbiased. Get’s the job done.
+//  Whereas this:
+//    array.sort( () => Math.random() - 0.5 )
+//  is biased (not all permutations are equally likely)
+//  and behavior can vary across JS engines.
+
+function arrayShuffle$( a, s ){
+
+	if( typeof a === 'undefined' ) return null
+	if( isNotArray( a )) a = Array.from( a )
+	for( let i = a.length - 1; i > 0; i -- ){
+	
+		const j = Math.floor( Math.random() * ( i + 1 ))
+		;[ a[ i ], a[ j ]] = [ a[ j ], a[ i ]]
+	}
+	if( isUsefulInteger( s )) return a.slice( 0, s )
+	return a
+}
+function arrayShuffle( a, s ){
+
+	if( typeof a === 'undefined' ) return null
+	if( isNotArray( a )) a = Array.from( a )
+	return arrayShuffle$( a.slice(), s )
+}
+
+
+
+
+
+
+    ////////////////
+   //            //
+  //   Ranges   //
+ //            //
+////////////////
+
+
+//  Range defines the full spectrum of values an instrument can measure (e.g., 0 to 100°C), 
+//  while Span is the single numerical difference between the highest (Upper Range Value) 
+//  and lowest (Lower Range Value) points (e.g., 100 - 0 = 100°C). 
+//  Range is the boundaries, while Span is the size or total extent of those boundaries, 
+//  crucial for instrument calibration and specifying performance.
+
+/*
+
+
+var rangeTen = new Range( 0, 10 )
+console.log( '\n\nRANGE DEMO: rangeTen.' )
+console.log( 'Is rangeTen a range?', isRange( rangeTen ))//  true
+console.log( 'Is rangeTen a wrapped range?', rangeTen.isWrapped )//  false
+console.log( 'rangeTen includes 2?', rangeTen.includes( 2 ))//  true
+console.log( 'rangeTen excludes 2?', rangeTen.excludes( 2 ))//  false
+console.log( '11 wrapped to rangeTen:', rangeTen.wrap( 11 ))//  1
+console.log( 'rangeTen to array:', rangeTen.toArray() )//  [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+console.log( 'rangeTen to array, by 2s', rangeTen.toArray( 2 ))//  [ 0, 2, 4, 6, 8, 10 ]
+console.log( 'rangeTen to array, by 3s', rangeTen.toArray( 3 ))//  [ 0, 3, 6, 9 ]
+console.log( 'Is 10 greater than rangeTen?', rangeTen.isNGreater( 10 ))//  false
+console.log( 'Is 12 greater than rangeTen?', rangeTen.isNGreater( 12 ))//  true
+console.log( 'Is 0 less than rangeTen?', rangeTen.isNLesser(   0 ))//  false
+console.log( 'Is -12 less than rangeTen?', rangeTen.isNLesser( -12 ))//  true
+
+var rgb = new Range( 0, 255, false )
+console.log( '\n\nRANGE DEMO: RGB.' )
+console.log( 'Is rgb a wrapped range?', rgb.isWrapped )//  false
+console.log( 'rgb includes 255?', rgb.includes( 255 ))//  true
+console.log( 'rgb excludes 255?', rgb.excludes( 255 ))//  false
+console.log( '256 wrapped to rgb:', rgb.wrap( 256 ))//  1
+console.log( 'Is 255 greater than rgb?', rgb.isNGreater( 255 ))//  false
+console.log( 'Is -1 less than rgb?', rgb.isNLesser( -1 ))//  true
+
+var hue = new Range( 0, 360, true )
+console.log( '\n\nRANGE DEMO: HUE.' )
+console.log( 'Is hue a wrapped range?', hue.isWrapped )//  false
+console.log( 'hue includes 360?', hue.includes( 360 ))//  false
+console.log( 'hue excludes 360?', hue.excludes( 360 ))//  true
+console.log( '360 wrapped to hue:', hue.wrap( 360 ))//  1
+console.log( 'Is 360 greater than hue?', hue.isNGreater( 360 ))//  true
+console.log( 'Is -1 less than hue?', hue.isNLesser( -1 ))//  true
+
+
+*/
+
+class Range {
+
+	constructor( a, b, isWrapped ){
+
+		if( isNotUsefulNumber( a )) return null
+		if( isNotUsefulNumber( b )){
+
+			b = a
+			a = 0
+		}
+		this.isWrapped = !!isWrapped
+		this.min  = Math.min( a, b )
+		this.max  = Math.max( a, b )
+		this.span = this.max - this.min
+	}
+	includes( n ){
+
+		const
+		isWithinLowerBound = n >= this.min,
+		isWithinUpperBound = 
+			this.isWrapped
+			? n <  this.max
+			: n <= this.max
+
+		return isWithinLowerBound && isWithinUpperBound
+	}
+	excludes( n ){
+
+		return !this.includes( n )
+	}
+	isNGreater( n ){
+
+		if( this.isWrapped ) return n >= this.max
+		return n > this.max
+	}
+	isNLesser( n ){
+
+		return n < this.min
+	}
+	clamp( n ){
+
+		const clamped = clamp( this.min, this.max, n )
+		if( this.isWrapped && clamped === this.max ) return this.min
+		return clamped
+	}
+	wrap( n ){
+
+		const fromZero = 0 - this.min
+		return this.min + mod( fromZero + n, this.span )
+	}
+	normalize( n ){
+
+		return normalize( this.min, this.max, n )
+	}
+	map( a, b, c ){
+
+		let other, n
+		if( isRange( a ) && 
+			isUsefulNumber( b )){
+
+			other = a
+			n = b
+		}
+		else if( isUsefulNumber( a )
+			&& isUsefulNumber( b )
+			&& isUsefulNumber( c )){
+
+			other = new Range( a, b )
+			n = c
+		}
+		else {
+
+			console.warn( `Invalid arguments supplied to Range.map:`, a, b, c )
+			return null
+		}
+		return mapRange( this.min, this.max, other.min, other.max, n )
+	}
+	toArray( step ){
+
+		if( isNotUsefulNumber( step ) || step <= 0 ) step = 1
+		const scope = this
+		return Array.from(
+			
+			{ length: ( scope.max - scope.min ) / step + 1 }, 
+			( _, index ) => scope.min + index * step
+		)
+	}
+}
+function isRange( n ){
+
+	return n instanceof Range
+}
+function isNotRange( n ){
+
+	return !isRange( n )
+}
+
+
 
 
 
@@ -218,7 +400,7 @@ const OPERATORS = {
 	mod: { 
 		
 		symbols: [ 'mod', '%', 'modulo', 'modulus', 'rem', 'remainder' ],
-		method:  ( n, ...args )=> args.reduce(( s, x )=> s / x, n )
+		method:  ( n, ...args )=> args.reduce(( s, x )=> s % x, n )
 	},
 	exp: {
 		
@@ -228,12 +410,12 @@ const OPERATORS = {
 	inc: {
 		
 		symbols: [ 'inc', '++', 'increment' ],
-		method:  ( n, ...args )=> args.reduce(( s, x )=> s ++, n )
+		method:  ( n, ...args )=> args.reduce(( s, x )=> s + 1, n )
 	},
 	dec: {
 		
 		symbols: [ 'dec', '--', 'decrement' ],
-		method:  ( n, ...args )=> args.reduce(( s, x )=> s --, n )
+		method:  ( n, ...args )=> args.reduce(( s, x )=> s - 1, n )
 	}
 }
 OPERATORS.symbols = Object.values( OPERATORS )
@@ -302,7 +484,7 @@ function parseRelativeNumber( s ){
 		//  Otherwise, return NULL.
 		
 		if( isNotUsefulNumber( s )) return null
-		return { operator: OPERATORS.add, s }
+		return { operator: OPERATORS.add, number: s }
 	}
 
 
@@ -367,7 +549,7 @@ function applyRelativeNumber( absOrRel, rel ){
 		rel = absOrRel
 	}
 	rel = parseRelativeNumber( rel )
-	if( !rel ) rel = { 
+	if( !rel || isNotUsefulNumber( rel.number )) rel = { 
 		
 		operator: OPERATORS.add, 
 		number:   0
@@ -402,7 +584,9 @@ function applyRelativeNumber( absOrRel, rel ){
 
 function random( n ){
 
-	return Math.random() * n
+	if( isArray( n )) return n[ Math.floor( Math.random() * n.length )]
+	if( isUsefulNumber( n )) return Math.random() * n
+	return null
 }
 function randomBetween( a, b ){
 
@@ -423,14 +607,24 @@ function randomIntegerBetween( a, b ){
 
 	return Math.floor( randomBetween( a, b ))
 }
-function clamp( n, min, max ){
+function clamp( a, b, c ){
 
-	if( isNotUsefulNumber( max )){
+	let
+	min = 0,
+	max = a,
+	n   = b
+
+	if( isUsefulNumber( c )){
 	
-		max = min
-		min = 0
+		min = a
+		max = b
+		n   = c
 	}
 	return Math.min( Math.max( n, min ), max )
+}
+function mod( x, n ){
+
+	return (( x % n ) + n ) % n
 }
 function round( n, e ){
 	
@@ -438,40 +632,63 @@ function round( n, e ){
 	const f = 10 ** e
 	return Math.round( n * f ) / f
 }
-function normalize( n, minOrRange, max ){
+function normalize( minOrRange, a, b ){
 
 	let 
 	min   = 0,
-	range = minOrRange
+	range = minOrRange,
+	n = a
 
-	if( isUsefulNumber( max )){
+	if( isUsefulNumber( b )){
 	
 		min = minOrRange
+		const max = a
 		range = max - min
+		n = b
 	}
 	return ( n - min ) / range
 }
-function normalize01( n, minOrRange, max ){
+function normalize01( minOrRange, a, b ){
 
-	return clamp( normalize( n, minOrRange, max ), 0, 1 )
+	return clamp( 0, 1, normalize( minOrRange, a, b ))
 }
-function lerp( n, minOrRange, max ){
+function lerp( minOrRange, a, b ){
 
 	let 
-	min   = 0,
-	range = minOrRange
+	min = 0,
+	range = minOrRange,
+	n = a
 
-	if( isUsefulNumber( max )){
+	if( isUsefulNumber( b )){
 	
 		min = minOrRange
-		range = max - min
+		range = a - min
+		n = b
 	}
 	return min + range * n
 }
-function mapRange( value, min1, max1, min2, max2 ){
+function mapRange( min1, max1, min2, max2, n ){
  
-	return min2 + ( max2 - min2 ) * (( value - min1 ) / ( max1 - min1 ))
+	return min2 + ( max2 - min2 ) * (( n - min1 ) / ( max1 - min1 ))
 }
+
+
+//  Thinking about a different architecture here...
+//  Currying, partial application...
+//  Perhaps even a “Curves” companion library.
+
+const mapRangeCurved = ( source ) => ( target ) => ( curve = ( t ) => t ) => ( n ) => {
+
+    const
+	t = ( n - source.min ) / source.span,
+    curved  = curve( t )
+
+    return target.min + target.span * curved
+}
+
+
+
+
 
 
 function alignWeights( numbersArray, weightsArray ){
@@ -682,11 +899,6 @@ function radiansToPointsArray( radians ){
 
 	return [ Math.cos( radians ), Math.sin( radians )]
 }
-function wrapToRange( n, range ){
-
-	while( n < 0 ) n += range
-	return n % range
-}
 function normalizeAngle( radians ){
 	
 	if( radians < 0 ) return TAU - ( Math.abs( radians ) % TAU )
@@ -708,26 +920,45 @@ function rotateCartesian( x, y, radians ){
 		Math.sin( radians ) * x + Math.cos( radians ) * y
 	]
 }
+
+
+
+
+
+
 function findMidpoint( a, b, av, bv, range ){
 
 	if( isNotUsefulNumber( av )) av = 1
 	if( isNotUsefulNumber( bv )) bv = 1
+	if( isRange( range )){
 
+		//  Oh good, it’s an actual Range instance.
+		//  But we need to ensure it's wrapped.
+		//  We’ll do that non-destructively here
+		//  by creating a new instance.
 
-	//  It’s likely we’re finding a point between two angles
-	//  given in radians (a range of 0..2π, and 2π = TAU).
-	//  But it’s trivial to specify the range as 0..360˚ instead.
+		if( !range.isWrapped ) range = new Range( range.min, range.max, true )
+	}
+	else {
 
-	if( isNotUsefulNumber( range )) range = TAU
-	const halfRange = range / 2
+		//  Accept a number as the span
+		//  with an implied min of 0.
+		//  It’s likely we’re finding a point between two angles
+		//  given in radians (a range of 0..2π, and 2π = TAU).
+		//  But it’s trivial to specify the range as 0..360˚ instead.
+		
+		const span = isUsefulNumber( range ) ? range : TAU
+		range = new Range( 0, span, true )
+	}
+	const halfRange = range.span / 2,
 
 
 	//  Let’s start out be ensuring that both numbers 
 	//  are within our wrapped range.
-	
+
 	const
-	aWrapped = wrapToRange( a, range ),
-	bWrapped = wrapToRange( b, range )
+	aWrapped = range.wrap( a ),
+    bWrapped = range.wrap( b )
 
 
 	//  Now we’ll find the shortest span between these numbers.
@@ -748,14 +979,10 @@ function findMidpoint( a, b, av, bv, range ){
 	//  That’s easily fixable.
 
 	if( larger < smaller ){
-	
-		const tempN = larger
-		larger  = smaller
-		smaller = tempN
-		diff    = larger - smaller
-		const tempV = largerV
-		largerV  = smallerV
-		smallerV = tempV
+
+		;[ smaller, larger ]   = [ larger,  smaller  ]
+		;[ smallerV, largerV ] = [ largerV, smallerV ]
+		diff = larger - smaller
 	}
 
 
@@ -765,46 +992,38 @@ function findMidpoint( a, b, av, bv, range ){
 	//  Let’s fix that.
 
 	if( diff > halfRange ){
-	
-		const tempN = larger
-		larger  = smaller + range
-		smaller = tempN
-		diff    = larger - smaller
-		const tempV = largerV
-		largerV  = smallerV
-		smallerV = tempV
+
+		;[ smaller, larger ]   = [ larger,  smaller + range ]
+		;[ smallerV, largerV ] = [ largerV, smallerV       ]
+		diff = larger - smaller
 	}
-	
+
 
 	//  Decide where in that range we should pick a value.
-	
-	const 
-	smallerVAbs = Math.abs( smallerV ),
-	largerVAbs  = Math.abs( largerV ),
-	velocitiesTotal = smallerVAbs + largerVAbs,
-	weight   = norm( smallerVAbs, velocitiesTotal ),
-	midPoint = lerp( smallerVAbs, largerVAbs, weight )
 
-	// ********** the above may be wrong as
-	//  smaller or larger may have negative values...
-	//  how do we pick the sign value????????!?!?!?!
+	const
+	smallerVAbs     = Math.abs( smallerV ),
+	largerVAbs      = Math.abs( largerV ),
+	velocitiesTotal = smallerVAbs + largerVAbs,
+	weight          = velocitiesTotal > 0 ? largerVAbs / velocitiesTotal : 0.5,
+	midPoint        = range.wrap( lerp( smaller, larger, weight ))
+
+	// console.log( 
 	
-	/*console.log( 
-	
-		'\n a˚ ', round( radiansToDegrees( a ), 2 ),
-		'\n a v', round( av, 2 ),
-		'\n b˚ ', round( radiansToDegrees( b ), 2 ),
-		'\n b v', round( bv, 2 ),
-		'\n range:',   range,
-		'\n smaller˚ ', round( radiansToDegrees( smaller ), 2 ),
-		'\n larger˚  ', round( radiansToDegrees( larger ), 2 ),
-		'\n diff˚    ', round( radiansToDegrees( diff ), 2 ),
-		'\n weight   ', round( weight, 2 ),
-		'\n midPoint˚', round( radiansToDegrees( midPoint ), 2 )
-	)*/
-	return midPoint	
+	// 	'\n a˚ ', round( radiansToDegrees( a ), 2 ),
+	// 	'\n a v', round( av, 2 ),
+	// 	'\n b˚ ', round( radiansToDegrees( b ), 2 ),
+	// 	'\n b v', round( bv, 2 ),
+	// 	'\n range:',   range,
+	// 	'\n smaller˚ ', round( radiansToDegrees( smaller ), 2 ),
+	// 	'\n larger˚  ', round( radiansToDegrees( larger ), 2 ),
+	// 	'\n diff˚    ', round( radiansToDegrees( diff ), 2 ),
+	// 	'\n weight   ', round( weight, 2 ),
+	// 	'\n midPoint˚', round( radiansToDegrees( midPoint ), 2 )
+	// )
+    return midPoint
 }
-function distance2D( x1, x2, y1, y2 ){
+function distance2D( x1, y1, x2, y2 ){
 
 	const
 	a = x2 - x1,
@@ -812,66 +1031,6 @@ function distance2D( x1, x2, y1, y2 ){
 	d = Math.hypot( a, b )
 
 	return d
-}
-
-
-
-
-
-
-    ///////////////
-   //           //
-  //   Color   //
- //           //
-///////////////
-
-
-function floatToHex( color ){
-	
-	return '#' + color.map( c => ( c * 255 ).toString( 16 ).padStart( 2, '0' )).join( '' )
-}
-
-
-//  Expects HSL --> 0..360˚, 0..100%, 0..100%.
-//  and outputs RGB 0..255
-
-function hslToRgb( h, s, l ){
-	
-	h /= 360
-	s /= 100
-	l /= 100
-	let r, g, b
-	if( s === 0 ){
-	
-		r = g = b = l//  Achromatic (grayscale)
-	} 
-	else {
-		
-		function hue2rgb( p, q, t ){
-
-			if( t < 0 ) t += 1
-			if( t > 1 ) t -= 1
-			if( t < 1 / 6 ) return p + ( q - p ) * 6 * t
-			if( t < 1 / 2 ) return q
-			if( t < 2 / 3 ) return p + ( q - p ) * ( 2 / 3 - t ) * 6
-			return p
-		}
-
-		const 
-		q = l < 0.5 ? l * ( 1 + s ) : l + s - l * s,
-		p = 2 * l - q
-
-		r = hue2rgb( p, q, h + 1 / 3 )
-		g = hue2rgb( p, q, h )
-		b = hue2rgb( p, q, h - 1 / 3 )
-	}
-	const rgb = [
-
-		r = Math.round( r * 255 ),
-		g = Math.round( g * 255 ),
-		b = Math.round( b * 255 )
-	]
-	return rgb
 }
 
 
@@ -904,7 +1063,7 @@ HECTO  =   2,
 DEKA   =   1,
 UNIT   =   0,
 DECI   =  -1,
-CENTA  =  -2,
+CENTI  =  -2,
 MILLI  =  -3,
 MICRO  =  -6,
 NANO   =  -9,
@@ -1083,7 +1242,17 @@ export {
 	isEmptyArray,
 	isNotEmptyArray,
 	isUsefulArray,
+	isNotUsefulArray,
 	arrayCount,
+	arrayShuffle$,
+	arrayShuffle,
+
+
+	//  Ranges.
+
+	Range,
+	isRange,
+	isNotRange,
 
 
 	//  Unitless goodies. 
@@ -1120,18 +1289,11 @@ export {
 	degreesToRadians,
 	radiansToDegrees,
 	radiansToPointsArray,
-	wrapToRange,
 	normalizeAngle,
 	polarToCartesian,
 	rotateCartesian,
 	findMidpoint,
 	distance2D,
-
-
-	//  Color.
-
-	floatToHex,
-	hslToRgb,
 
 
 	//  Metric system.
